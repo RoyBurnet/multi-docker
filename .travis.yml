@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t rburnet/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run rburnet/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t rburnet/multi-client ./client
+  - docker build -t rburnet/multi-nginx ./nginx
+  - docker build -t rburnet/multi-server ./server
+  - docker build -t rburnet/multi-worker ./worker
+# login to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+# Take those images and push them to docker hub
+  - docker push rburnet/multi-client
+  - docker push rburnet/multi-nginx
+  - docker push rburnet/multi-server
+  - docker push rburnet/multi-worker
